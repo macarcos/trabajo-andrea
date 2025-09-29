@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Validación de Documentos RRHH</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <!-- Header -->
+            <div class="header">
+                <h1>Sistema de Validación de Documentos RRHH</h1>
+                <p>Detección de duplicados, nombres entreverados y datos inconsistentes</p>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Upload Section -->
+                <div class="upload-section">
+                    <!-- Documento 1 -->
+                    <div class="upload-box" id="uploadBox1">
+                        <h3>📊 Documento Maestro</h3>
+                        <p>Archivo Excel con la base de datos completa</p>
+                        <input type="file" id="file1" class="upload-input" accept=".xlsx,.xls">
+                        <label for="file1" class="upload-label">Seleccionar Archivo</label>
+                        <div class="file-info" id="fileInfo1" style="display: none;"></div>
+                    </div>
+
+                    <!-- Documento 2 -->
+                    <div class="upload-box" id="uploadBox2">
+                        <h3>📋 Documento a Validar</h3>
+                        <p>Archivo Excel a validar contra el maestro</p>
+                        <input type="file" id="file2" class="upload-input" accept=".xlsx,.xls">
+                        <label for="file2" class="upload-label orange">Seleccionar Archivo</label>
+                        <div class="file-info" id="fileInfo2" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Mapping Section -->
+                <div class="mapping-section" id="mappingSection">
+                    <div class="mapping-header">
+                        <h2>⚙️ Mapeo de Columnas</h2>
+                        <button class="toggle-mapping" onclick="toggleMapping()">Ocultar Mapeo</button>
+                    </div>
+
+                    <p style="margin-bottom: 2rem; color: #6b7280;">
+                        Seleccione qué columnas de cada documento se van a comparar:
+                    </p>
+
+                    <!-- Mapeo de Cédula -->
+                    <div class="mapping-row">
+                        <h3 style="color: #dc2626;">🔢 Cédula/Identificación (Obligatorio)</h3>
+                        <div class="mapping-controls">
+                            <div>
+                                <label>Documento Maestro:</label>
+                                <select id="cedula1" onchange="updateMapping()">
+                                    <option value="">Seleccionar columna...</option>
+                                </select>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div>
+                                <label>Documento a Validar:</label>
+                                <select id="cedula2" onchange="updateMapping()">
+                                    <option value="">Seleccionar columna...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mapeo de Nombre -->
+                    <div class="mapping-row">
+                        <h3 style="color: #2563eb;">👤 Nombre Completo (Obligatorio)</h3>
+                        <div class="mapping-controls">
+                            <div>
+                                <label>Documento Maestro:</label>
+                                <select id="nombre1" onchange="updateMapping()">
+                                    <option value="">Seleccionar columna de nombre...</option>
+                                </select>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div>
+                                <label>Documento a Validar:</label>
+                                <select id="nombre2" onchange="updateMapping()">
+                                    <option value="">Seleccionar columna de nombre...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mapeo de Lugar -->
+                    <div class="mapping-row">
+                        <h3 style="color: #7c3aed;">🏢 Lugar de Trabajo (Opcional)</h3>
+                        <div class="mapping-controls">
+                            <div>
+                                <label>Documento Maestro:</label>
+                                <select id="lugar1" onchange="updateMapping()">
+                                    <option value="">Seleccionar columna de lugar...</option>
+                                </select>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div>
+                                <label>Documento a Validar:</label>
+                                <select id="lugar2" onchange="updateMapping()">
+                                    <option value="">Seleccionar columna de lugar...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Button -->
+                <div class="validation-section">
+                    <button class="validate-btn" id="validateBtn" onclick="validateDocuments()" disabled>
+                        <span id="validateText">Validar Documentos</span>
+                        <div class="spinner" id="spinner" style="display: none;"></div>
+                    </button>
+                    <p class="validation-warning" id="validationWarning" style="display: none;">
+                        * Debe seleccionar las columnas de cédula y nombre para ambos documentos
+                    </p>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-section" id="resultsSection" style="display: none;">
+                    <h2>🚨 Inconsistencias Encontradas</h2>
+                    
+                    <!-- Error Summary Cards -->
+                    <div class="error-summary" id="errorSummary">
+                        <!-- Se genera dinámicamente -->
+                    </div>
+
+                    <!-- Error Tables Container -->
+                    <div class="error-tables-container" id="errorTablesContainer">
+                        <!-- Las tablas se generan dinámicamente aquí -->
+                    </div>
+
+                    <!-- Export Section -->
+                    <div class="export-section" id="exportSection" style="display: none;">
+                        <button class="export-btn" onclick="exportErrors()">
+                            📥 Exportar Inconsistencias a Excel
+                        </button>
+                        <p id="exportInfo">Solo se exportarán los datos con errores</p>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div class="success-message" id="successMessage" style="display: none;">
+                        <div class="success-content">
+                            <div class="success-icon">✅</div>
+                            <h3>¡Validación Exitosa!</h3>
+                            <p>No se encontraron inconsistencias en los documentos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
